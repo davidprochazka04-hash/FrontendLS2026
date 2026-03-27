@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -10,81 +10,47 @@ import {
 
 import ShoppingListsRoute from "./routes/ShoppingListsRoute";
 import ShoppingListDetail from "./routes/ShoppingListDetail";
+import { calls } from "./api/calls";
 import "./App.css";
-
-const INITIAL_DATA_SOURCE = [
-  {
-    id: "list-001",
-    name: "Nákup v Albertu",
-    ownerId: "user-123",
-    isArchived: false,
-    members: [
-      { id: "m-1", name: "Jan Novák" },
-      { id: "m-2", name: "Marie Stará" },
-    ],
-    items: [
-      { id: "i-1", name: "Čerstvé máslo", state: "unresolved" },
-      { id: "i-2", name: "Celozrnné rohlíky", state: "resolved" },
-      { id: "i-3", name: "Plzeň 12° (6-pack)", state: "unresolved" },
-    ],
-  },
-  {
-    id: "list-002",
-    name: "Grilovačka sobota",
-    ownerId: "user-123",
-    isArchived: false,
-    members: [],
-    items: [
-      { id: "i-g1", name: "Krkovice 1kg", state: "unresolved" },
-      { id: "i-g2", name: "Brikety", state: "unresolved" },
-      { id: "i-g3", name: "Hořčice plnotučná", state: "unresolved" },
-    ],
-  },
-  {
-    id: "list-003",
-    name: "Dárky Vánoce",
-    ownerId: "user-456",
-    isArchived: true,
-    members: [{ id: "m-3", name: "Petr Svoboda" }],
-    items: [{ id: "i-v1", name: "Ponožky", state: "resolved" }],
-  },
-];
 
 function App() {
   const currentUserId = "user-123";
-  const [lists, setLists] = useState(INITIAL_DATA_SOURCE);
 
+  // ✅ data jsou načítána ze serverové vrstvy (mock / backend)
+  const [lists, setLists] = useState([]);
+
+  // ✅ inicializační načtení dat
+  useEffect(() => {
+    calls.listLists().then((data) => {
+      setLists(data);
+    });
+  }, []);
+
+  // ✅ veškeré operace nad daty jdou přes serverovou vrstvu
   const actions = useMemo(() => {
     return {
-      createList: (name) => {
-        const newList = {
-          id: `list-${Date.now()}`,
-          name,
-          ownerId: currentUserId,
-          isArchived: false,
-          members: [],
-          items: [],
-        };
-
+      createList: async (name) => {
+        const newList = await calls.createList(name, currentUserId);
         setLists((prev) => [...prev, newList]);
-        return newList.id; 
+        return newList.id;
       },
 
-      deleteList: (id) => {
+      deleteList: async (id) => {
+        await calls.deleteList(id);
         setLists((prev) => prev.filter((l) => l.id !== id));
       },
 
-      toggleArchive: (id) => {
+      toggleArchive: async (id) => {
+        const updated = await calls.toggleArchive(id);
         setLists((prev) =>
-          prev.map((l) =>
-            l.id === id ? { ...l, isArchived: !l.isArchived } : l
-          )
+          prev.map((l) => (l.id === id ? updated : l))
         );
       },
 
-      updateList: (updatedList) => {
+      updateList: async (updatedList) => {
+        const saved = await calls.updateList(updatedList);
         setLists((prev) =>
-          prev.map((l) => (l.id === updatedList.id ? updatedList : l))
+          prev.map((l) => (l.id === saved.id ? saved : l))
         );
       },
     };
@@ -95,6 +61,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/lists" replace />} />
 
+        {/* ✅ ROUTE: PŘEHLED SEZNAMŮ */}
         <Route
           path="/lists"
           element={
@@ -108,6 +75,7 @@ function App() {
           }
         />
 
+        {/* ✅ ROUTE: DETAIL SEZNAMU */}
         <Route
           path="/lists/:id"
           element={
@@ -126,6 +94,10 @@ function App() {
   );
 }
 
+/* =========================
+   DETAIL ROUTE
+========================= */
+
 function DetailRoute({
   lists,
   currentUserId,
@@ -141,7 +113,9 @@ function DetailRoute({
     return (
       <div style={{ padding: 24 }}>
         <h2>Seznam nenalezen</h2>
-        <button onClick={() => navigate("/lists")}>← Zpět</button>
+        <button onClick={() => navigate("/lists")}>
+          ← Zpět na seznamy
+        </button>
       </div>
     );
   }

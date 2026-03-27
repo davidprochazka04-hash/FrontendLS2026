@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import MembersModal from "../components/MembersModal";
 import AddItemModal from "../components/AddItemModal";
 import { AddIcon, MembersIcon } from "../styles/buttonStyles";
+import { calls } from "../api/calls";
 
 const ShoppingListDetail = ({
   listData,
@@ -15,60 +16,40 @@ const ShoppingListDetail = ({
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
 
-  // editace názvu
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(listData?.name ?? "");
-
   const isOwner = list?.ownerId === currentUserId;
 
   useEffect(() => {
     setList(listData);
-    setTitleDraft(listData?.name ?? "");
   }, [listData]);
 
-  
-  const update = (updater) => {
-    setList((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      onUpdateList?.(next);
-      return next;
-    });
+  /* =========================
+     SERVER‑BASED OPERATIONS
+  ========================= */
+
+  const updateFromServer = async (updatedListPromise) => {
+    const updatedList = await updatedListPromise;
+    setList(updatedList);
+    onUpdateList(updatedList);
   };
 
-  const handleToggleItem = (itemId) => {
-    update((prev) => ({
-      ...prev,
-      items: (prev.items || []).map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              state: item.state === "resolved" ? "unresolved" : "resolved",
-            }
-          : item
-      ),
-    }));
+  const handleToggleItem = async (itemId) => {
+    updateFromServer(calls.toggleItem(list.id, itemId));
   };
 
-  // přidání položky z modalu
-  const handleAddItem = (name) => {
-    update((prev) => ({
-      ...prev,
-      items: [
-        {
-          id: Date.now().toString(),
-          name,
-          state: "unresolved",
-        },
-        ...(prev.items || []),
-      ],
-    }));
+  const handleAddItem = async (name) => {
+    updateFromServer(calls.addItem(list.id, name));
   };
 
-  const handleRemoveItem = (itemId) => {
-    update((prev) => ({
-      ...prev,
-      items: (prev.items || []).filter((i) => i.id !== itemId),
-    }));
+  const handleRemoveItem = async (itemId) => {
+    updateFromServer(calls.removeItem(list.id, itemId));
+  };
+
+  const handleAddMember = async (name) => {
+    updateFromServer(calls.addMember(list.id, name));
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    updateFromServer(calls.removeMember(list.id, memberId));
   };
 
   if (!list) return <div>Načítání…</div>;
@@ -78,7 +59,7 @@ const ShoppingListDetail = ({
       <Header
         showArchived={list.isArchived}
         onToggleArchived={onToggleArchive}
-        />
+      />
 
       <div style={styles.detailHeaderWrapper}>
         <div style={styles.badgeRow}>
@@ -90,52 +71,31 @@ const ShoppingListDetail = ({
           )}
         </div>
 
-        {/* EDITACE NÁZVU */}
-        {isOwner && isEditingTitle ? (
-          <input
-            value={titleDraft}
-            autoFocus
-            onChange={(e) => setTitleDraft(e.target.value)}
-            onBlur={() => {
-              if (titleDraft.trim() && titleDraft !== list.name) {
-                update((prev) => ({ ...prev, name: titleDraft.trim() }));
-              }
-              setIsEditingTitle(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.target.blur();
-              if (e.key === "Escape") {
-                setTitleDraft(list.name);
-                setIsEditingTitle(false);
-              }
-            }}
-            style={styles.titleInput}
-          />
-        ) : (
-          <h2
-            style={styles.detailTitle}
-            onClick={() => isOwner && setIsEditingTitle(true)}
-          >
-            {list.name}
-            {isOwner && <span style={styles.editIcon}> ✏️</span>}
-          </h2>
-        )}
+        <h2 style={styles.detailTitle}>{list.name}</h2>
 
         {/* TLAČÍTKA */}
         <div style={styles.detailActions}>
+          
           <button
             style={styles.actionBtn}
             onClick={() => setIsMembersModalOpen(true)}
           >
-            <MembersIcon/> Členové ({list.members?.length || 0})
+            <MembersIcon />
+            <span style={styles.actionBtnText}>
+              Členové ({list.members?.length || 0})
+            </span>
           </button>
 
           <button
             style={styles.actionBtn}
             onClick={() => setIsAddItemModalOpen(true)}
           >
-            <AddIcon /> Přidat položku
+            <AddIcon />
+            <span style={styles.actionBtnText}>
+              Přidat položku
+            </span>
           </button>
+
 
           <label style={styles.checkboxLabel}>
             <input
@@ -166,7 +126,9 @@ const ShoppingListDetail = ({
                   {resolved && "✓"}
                 </div>
 
-                <div style={styles.itemText(resolved)}>{item.name}</div>
+                <div style={styles.itemText(resolved)}>
+                  {item.name}
+                </div>
 
                 <button
                   onClick={() => handleRemoveItem(item.id)}
@@ -192,28 +154,18 @@ const ShoppingListDetail = ({
         <MembersModal
           members={list.members || []}
           isOwner={isOwner}
-          onAdd={(name) =>
-            update((prev) => ({
-              ...prev,
-              members: [
-                ...(prev.members || []),
-                { id: Date.now().toString(), name },
-              ],
-            }))
-          }
-          onRemove={(id) =>
-            update((prev) => ({
-              ...prev,
-              members: prev.members.filter((m) => m.id !== id),
-            }))
-          }
+          onAdd={handleAddMember}
+          onRemove={handleRemoveMember}
           onClose={() => setIsMembersModalOpen(false)}
         />
       )}
-
-      </div>
+    </div>
   );
 };
+
+/* =========================
+   STYLES
+========================= */
 
 const styles = {
   container: {
@@ -233,19 +185,6 @@ const styles = {
     fontWeight: "900",
     color: "#000",
     margin: "10px 0",
-    cursor: "pointer",
-  },
-  titleInput: {
-    fontSize: "2rem",
-    fontWeight: "900",
-    textAlign: "center",
-    border: "2px solid #000",
-    borderRadius: "12px",
-    padding: "6px 12px",
-  },
-  editIcon: {
-    fontSize: "1rem",
-    opacity: 0.6,
   },
   badgeRow: {
     display: "flex",
@@ -280,12 +219,12 @@ const styles = {
     cursor: "pointer",
     fontWeight: "800",
     fontSize: "0.9rem",
+    color:"#000",
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
     minWidth: "160px",
     justifyContent: "center",
-    color: "#000000",
   },
   checkboxLabel: {
     display: "flex",
