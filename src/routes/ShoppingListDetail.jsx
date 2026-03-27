@@ -26,11 +26,18 @@ const ShoppingListDetail = ({
      SERVER‑BASED OPERATIONS
   ========================= */
 
-  const updateFromServer = async (updatedListPromise) => {
+  
+const updateFromServer = async (updatedListPromise) => {
+  try {
     const updatedList = await updatedListPromise;
     setList(updatedList);
     onUpdateList(updatedList);
-  };
+  } catch (error) {
+    alert("Chyba při komunikaci se serverem");
+    console.error(error);
+  }
+};
+
 
   const handleToggleItem = async (itemId) => {
     updateFromServer(calls.toggleItem(list.id, itemId));

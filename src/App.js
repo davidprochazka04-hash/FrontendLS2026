@@ -13,20 +13,33 @@ import ShoppingListDetail from "./routes/ShoppingListDetail";
 import { calls } from "./api/calls";
 import "./App.css";
 
+/* =========================
+   APP
+========================= */
+
 function App() {
   const currentUserId = "user-123";
 
-  // ✅ data jsou načítána ze serverové vrstvy (mock / backend)
+  //data ze serveru (mock / backend)
   const [lists, setLists] = useState([]);
+  const [status, setStatus] = useState("pending"); // pending | ready | error
 
-  // ✅ inicializační načtení dat
+  // inicializační načtení dat
   useEffect(() => {
-    calls.listLists().then((data) => {
-      setLists(data);
-    });
+    setStatus("pending");
+
+    calls
+      .listLists()
+      .then((data) => {
+        setLists(data);
+        setStatus("ready");
+      })
+      .catch(() => {
+        setStatus("error");
+      });
   }, []);
 
-  // ✅ veškeré operace nad daty jdou přes serverovou vrstvu
+  // veškeré operace nad daty jdou přes serverovou vrstvu
   const actions = useMemo(() => {
     return {
       createList: async (name) => {
@@ -56,12 +69,25 @@ function App() {
     };
   }, [currentUserId]);
 
+  // ošetření stavů načítání / chyby
+  if (status === "pending") {
+    return <div style={{ padding: 40 }}>Načítání dat…</div>;
+  }
+
+  if (status === "error") {
+    return (
+      <div style={{ padding: 40, color: "red" }}>
+        Chyba při načítání dat ze serveru
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/lists" replace />} />
 
-        {/* ✅ ROUTE: PŘEHLED SEZNAMŮ */}
+        {/* ROUTE: PŘEHLED SEZNAMŮ */}
         <Route
           path="/lists"
           element={
@@ -75,7 +101,7 @@ function App() {
           }
         />
 
-        {/* ✅ ROUTE: DETAIL SEZNAMU */}
+        {/* ROUTE: DETAIL SEZNAMU */}
         <Route
           path="/lists/:id"
           element={
