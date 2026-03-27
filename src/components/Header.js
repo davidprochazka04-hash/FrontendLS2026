@@ -1,40 +1,45 @@
 import React from 'react';
 
+
 const Header = ({ onNewListClick, onToggleArchived, showArchived }) => {
   return (
     <header style={headerStyle}>
       <div style={logoSection}>
         <div style={logoIcon}>🛒</div>
-       
         <h1 style={logoText}>Moje nákupní seznamy</h1>
       </div>
 
       <div style={buttonGroup}>
-        <button 
-          style={showArchived ? activeToggleStyle : toggleStyle} 
-          onClick={onToggleArchived}
-        >
-          {showArchived ? "📁 Skrýt archiv" : "📁 Archiv"}
-        </button>
-        
-        <button 
-          style={primaryBtnStyle} 
-          onClick={onNewListClick}
-        >
-          <span>+</span> Nový seznam
-        </button>
+        {onToggleArchived && (
+          <button
+            style={showArchived ? activeToggleStyle : toggleStyle}
+            onClick={onToggleArchived}
+          >
+            {showArchived ? "📜 Skrýt archiv" : "📜 Archiv"}
+          </button>
+        )}
+
+        {/* TLAČÍTKO SE ZOBRAZÍ JEN KDYŽ EXISTUJE HANDLER */}
+        {onNewListClick && (
+          <button
+            style={primaryBtnStyle}
+            onClick={onNewListClick}
+          >
+            <span>＋</span> Nový seznam
+          </button>
+        )}
       </div>
     </header>
   );
 };
 
-/* --- MODERNÍ STYLY PRO HEADER --- */
 
 const headerStyle = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '16px 24px',
+  gap: '40px',
   backgroundColor: 'rgba(255, 255, 255, 0.9)', 
   backdropFilter: 'blur(10px)',
   borderRadius: '16px',
@@ -51,7 +56,8 @@ const headerStyle = {
 const logoSection = {
   display: 'flex',
   alignItems: 'center',
-  gap: '12px'
+  gap: '12px',
+  flex: 1,
 };
 
 const logoIcon = {
