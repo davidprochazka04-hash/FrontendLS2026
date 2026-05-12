@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import Header from "../components/Header";
 import CreateListModal from "../components/CreateListModal";
 import {
@@ -16,10 +18,11 @@ const ShoppingListsRoute = ({
   onToggleArchive,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showArchived, setShowArchived] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // přístup: owner nebo člen
+  // Přístup: owner nebo člen
   const accessibleLists = useMemo(() => {
     return lists.filter((l) => {
       const isOwner = l.ownerId === currentUserId;
@@ -36,6 +39,14 @@ const ShoppingListsRoute = ({
     );
   }, [accessibleLists, showArchived]);
 
+  // Data pro sloupcový graf (vizualizace počtu položek v seznamech)
+  const chartData = useMemo(() => {
+    return filteredLists.map(list => ({
+      name: list.name,
+      count: (list.items || []).length
+    }));
+  }, [filteredLists]);
+
   const handleCreate = (name) => {
     onCreateList(name);
     setIsModalOpen(false);
@@ -43,7 +54,7 @@ const ShoppingListsRoute = ({
 
   const handleDelete = (e, list) => {
     e.stopPropagation();
-    if (window.confirm(`Opravdu chcete smazat seznam "${list.name}"?`)) {
+    if (window.confirm(t('modal.confirmDelete', `Opravdu chcete smazat seznam "${list.name}"?`))) {
       onDeleteList(list.id);
     }
   };
@@ -60,6 +71,32 @@ const ShoppingListsRoute = ({
         onToggleArchived={() => setShowArchived((p) => !p)}
         onNewListClick={() => setIsModalOpen(true)}
       />
+
+      {/* STATISTIKA: Sloupcový graf počtu položek */}
+      {chartData.length > 0 && (
+        <div style={styles.chartSection}>
+          <h2 style={styles.chartTitle}>{t('header.mainTitle', 'Moje nákupní seznamy')}</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" hide />
+              <YAxis allowDecimals={false} stroke="var(--text-muted)" fontSize={12} />
+              <Tooltip 
+                cursor={{fill: 'transparent'}}
+                contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)' }}
+              />
+              <Bar 
+                dataKey="count" 
+                name={t('route.itemCountLabel', 'Počet')} 
+                radius={[4, 4, 0, 0]}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill="var(--primary)" opacity={0.8} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div style={styles.grid}>
         {filteredLists.map((list) => {
@@ -79,8 +116,8 @@ const ShoppingListsRoute = ({
                     <button
                       title={
                         list.isArchived
-                          ? "Obnovit z archivu"
-                          : "Archivovat"
+                          ? t('detail.activeList')
+                          : t('detail.archivedList')
                       }
                       onClick={(e) => handleArchive(e, list)}
                       style={styles.iconBtn}
@@ -95,7 +132,7 @@ const ShoppingListsRoute = ({
 
                   {isOwner && (
                     <button
-                      title="Smazat seznam"
+                      title={t('detail.delete')}
                       onClick={(e) => handleDelete(e, list)}
                       style={styles.deleteIconBtn}
                     >
@@ -106,14 +143,14 @@ const ShoppingListsRoute = ({
               </div>
 
               <div style={styles.meta}>
-                <div>Položek: {(list.items || []).length}</div>
+                <div>{t('route.itemsCount')}: {(list.items || []).length}</div>
                 <div>
-                  Role: {isOwner ? "👑 Majitel" : "👥 Člen"}
+                  {t('route.roleLabel', 'Role')}: {isOwner ? t('route.owner') : t('route.member')}
                 </div>
 
                 {list.isArchived && (
                   <div style={styles.archivedBadge}>
-                    Archivováno
+                    {t('detail.archiveBadge', 'Archivováno')}
                   </div>
                 )}
               </div>
@@ -138,24 +175,35 @@ const styles = {
     padding: "0 20px",
     fontFamily: "'Inter', sans-serif",
   },
-
+  chartSection: {
+    background: "var(--bg-card)",
+    padding: "20px",
+    borderRadius: "16px",
+    border: "1px solid var(--border-color)",
+    marginBottom: "30px",
+  },
+  chartTitle: {
+    fontSize: "1.2rem",
+    fontWeight: "800",
+    color: "var(--text-main)",
+    marginBottom: "15px",
+    textAlign: "center",
+  },
   grid: {
     display: "grid",
     gap: "20px",
     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
     marginTop: "30px",
   },
-
   card: {
-    border: "1px solid #f1f3f5",
+    border: "1px solid var(--border-color)",
     padding: "24px",
     cursor: "pointer",
-    background: "#fff",
+    background: "var(--bg-card)",
     borderRadius: "16px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
     transition: "transform 0.1s ease",
   },
-
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -163,53 +211,47 @@ const styles = {
     marginBottom: "12px",
     gap: 12,
   },
-
   cardTitle: {
     margin: 0,
-    color: "#000",
+    color: "var(--text-main)",
     fontWeight: "800",
   },
-
   actions: {
     display: "flex",
     gap: "6px",
   },
-
   iconBtn: {
     background: "transparent",
-    border: "1px solid #eee",
+    border: "1px solid var(--border-color)",
     borderRadius: "10px",
     cursor: "pointer",
     padding: "6px 10px",
     opacity: 0.85,
   },
-
   deleteIconBtn: {
     background: "transparent",
     border: "none",
     cursor: "pointer",
     fontSize: "1.4rem",
     fontWeight: "900",
-    color: "#ff4d4f",
+    color: "var(--danger)",
     lineHeight: "1",
     padding: "4px 6px",
     borderRadius: "8px",
   },
-
   meta: {
     display: "grid",
     gap: 6,
-    color: "#333",
+    color: "var(--text-main)",
     fontWeight: 600,
   },
-
   archivedBadge: {
     display: "inline-block",
     marginTop: 8,
     padding: "4px 10px",
     borderRadius: 999,
-    background: "#fff0f0",
-    color: "#ff4d4f",
+    background: "rgba(255, 77, 79, 0.1)",
+    color: "var(--danger)",
     width: "fit-content",
     fontSize: 12,
     fontWeight: 800,

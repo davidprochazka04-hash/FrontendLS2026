@@ -1,12 +1,15 @@
 import React from 'react';
-
+import { useTranslation } from 'react-i18next';
 
 const Header = ({ onNewListClick, onToggleArchived, showArchived }) => {
+  const { t } = useTranslation();
+
   return (
     <header style={headerStyle}>
       <div style={logoSection}>
         <div style={logoIcon}>🛒</div>
-        <h1 style={logoText}>Moje nákupní seznamy</h1>
+        {/* Překlad hlavního titulku */}
+       <h1 style={logoText}>{t('header.mainTitle', 'Moje nákupní seznamy')}</h1>
       </div>
 
       <div style={buttonGroup}>
@@ -15,23 +18,24 @@ const Header = ({ onNewListClick, onToggleArchived, showArchived }) => {
             style={showArchived ? activeToggleStyle : toggleStyle}
             onClick={onToggleArchived}
           >
-            {showArchived ? "📜 Skrýt archiv" : "📜 Archiv"}
+            
+            📜 {showArchived ? t('header.hideArchive') : t('header.showArchive')}
           </button>
         )}
 
-        {/* TLAČÍTKO SE ZOBRAZÍ JEN KDYŽ EXISTUJE HANDLER */}
         {onNewListClick && (
           <button
             style={primaryBtnStyle}
             onClick={onNewListClick}
           >
-            <span>＋</span> Nový seznam
+             <span>＋</span> {t('detail.createNew')}
           </button>
         )}
       </div>
     </header>
   );
 };
+
 
 
 const headerStyle = {

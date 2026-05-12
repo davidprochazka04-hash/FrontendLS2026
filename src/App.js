@@ -7,7 +7,8 @@ import {
   useParams,
   useNavigate,
 } from "react-router-dom";
-
+import { useTranslation } from "react-i18next";
+import "./locales/i18n"; 
 import ShoppingListsRoute from "./routes/ShoppingListsRoute";
 import ShoppingListDetail from "./routes/ShoppingListDetail";
 import { calls } from "./api/calls";
@@ -18,16 +19,22 @@ import "./App.css";
 ========================= */
 
 function App() {
+  const { t, i18n } = useTranslation();
   const currentUserId = "user-123";
 
-  //data ze serveru (mock / backend)
+  // Data a stavy
   const [lists, setLists] = useState([]);
-  const [status, setStatus] = useState("pending"); // pending | ready | error
+  const [status, setStatus] = useState("pending");
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // inicializační načtení dat
+  // Přepínání Dark Mode 
+  useEffect(() => {
+    document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  // Inicializační načtení dat
   useEffect(() => {
     setStatus("pending");
-
     calls
       .listLists()
       .then((data) => {
@@ -39,7 +46,7 @@ function App() {
       });
   }, []);
 
-  // veškeré operace nad daty jdou přes serverovou vrstvu
+  // API akce
   const actions = useMemo(() => {
     return {
       createList: async (name) => {
@@ -47,19 +54,16 @@ function App() {
         setLists((prev) => [...prev, newList]);
         return newList.id;
       },
-
       deleteList: async (id) => {
         await calls.deleteList(id);
         setLists((prev) => prev.filter((l) => l.id !== id));
       },
-
       toggleArchive: async (id) => {
         const updated = await calls.toggleArchive(id);
         setLists((prev) =>
           prev.map((l) => (l.id === id ? updated : l))
         );
       },
-
       updateList: async (updatedList) => {
         const saved = await calls.updateList(updatedList);
         setLists((prev) =>
@@ -69,21 +73,49 @@ function App() {
     };
   }, [currentUserId]);
 
-  // ošetření stavů načítání / chyby
+  // Ošetření stavů načítání
   if (status === "pending") {
-    return <div style={{ padding: 40 }}>Načítání dat…</div>;
+    return <div className="loading-screen">{t('detail.loading', 'Načítání dat…')}</div>;
   }
 
   if (status === "error") {
     return (
-      <div style={{ padding: 40, color: "red" }}>
-        Chyba při načítání dat ze serveru
+      <div className="error-screen">
+        {t('detail.error', 'Chyba při načítání dat ze serveru')}
       </div>
     );
   }
 
   return (
     <BrowserRouter>
+      {/* PANEL PRO PŘEPÍNAČE */}
+    <div className="top-settings-bar">
+      {/* INDIKÁTOR JAZYKA */}
+      <div className="language-selector">
+        <button 
+          onClick={() => i18n.changeLanguage('cs')} 
+          className={`lang-btn ${i18n.language === 'cs' ? 'active' : ''}`}
+        >
+          CZ
+        </button>
+        <span className="separator">|</span>
+        <button 
+          onClick={() => i18n.changeLanguage('en')} 
+          className={`lang-btn ${i18n.language === 'en' ? 'active' : ''}`}
+        >
+          EN
+        </button>
+      </div>
+
+        {/* PŘEPÍNAČ DARK MODE */}
+        <button 
+          onClick={() => setIsDarkMode(!isDarkMode)} 
+          className="settings-btn"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+</div>
+
       <Routes>
         <Route path="/" element={<Navigate to="/lists" replace />} />
 
@@ -121,7 +153,7 @@ function App() {
 }
 
 /* =========================
-   DETAIL ROUTE
+   DETAIL ROUTE (Sub-komponenta)
 ========================= */
 
 function DetailRoute({
@@ -132,37 +164,28 @@ function DetailRoute({
 }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const list = lists.find((l) => l.id === id);
 
   if (!list) {
     return (
-      <div style={{ padding: 24 }}>
-        <h2>Seznam nenalezen</h2>
-        <button onClick={() => navigate("/lists")}>
-          ← Zpět na seznamy
+      <div className="not-found-container">
+        <h2>{t('detail.notFound')}</h2>
+        <button className="back-btn-primary" onClick={() => navigate("/lists")}>
+          {t('app.backBtn')}
         </button>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: "20px auto", padding: "0 20px" }}>
+    <div className="detail-route-wrapper">
       <button
         onClick={() => navigate("/lists")}
-        style={{
-          marginBottom: "20px",
-          cursor: "pointer",
-          padding: "10px 18px",
-          background: "#fff",
-          border: "1px solid #dee2e6",
-          borderRadius: "12px",
-          fontWeight: "700",
-          color: "#000",
-          whiteSpace: "nowrap",
-        }}
+        className="back-btn-ui"
       >
-        ← Zpět na všechny seznamy
+        {t('app.backBtn')}
       </button>
 
       <ShoppingListDetail

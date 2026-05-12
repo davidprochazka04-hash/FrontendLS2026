@@ -1,0 +1,43 @@
+{
+  "app": {
+    "backBtn": "← Back to all lists"
+  },
+  "route": {
+    "itemsCount": "Items",
+    "itemCountLabel": "Item count",
+    "owner": "Owner",
+    "member": "Member",
+    "chartTitle": "Items Count Overview"
+  },
+  "detail": {
+    "resolved": "Resolved",
+    "unresolved": "Unresolved",
+    "activeList": "Restore from archive",
+    "archivedList": "Archive list",
+    "members": "Members",
+    "edit": "Edit name",
+    "delete": "Delete list",
+    "addItem": "Add item",
+    "showResolved": "Show resolved",
+    "chartTitle": "Items Statistics",
+    "notFound": "List not found",
+    "createNew": "Create new"
+  },
+  "modal": {
+  "create": "Create",
+  "cancel": "Cancel",
+  "placeholder": "Enter name...",
+  "placeholder_item": "Item name"
+},
+"header": {
+    "mainTitle": "My Shopping Lists",
+    "showArchive": "Archive",
+    "hideArchive": "Hide archive"
+},
+"members": {
+  "title": "List members",
+  "empty": "No members yet",
+  "placeholder": "New member name",
+  "add": "Add member"
+}
+}

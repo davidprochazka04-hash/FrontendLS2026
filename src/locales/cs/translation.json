@@ -1,0 +1,43 @@
+{
+  "app": {
+    "backBtn": "← Zpět na všechny seznamy"
+  },
+  "route": {
+    "itemsCount": "Položek",
+    "itemCountLabel": "Počet položek",
+    "owner": "Majitel",
+    "member": "Člen",
+    "chartTitle": "Přehled počtu položek"
+  },
+  "detail": {
+    "resolved": "Vyřešené",
+    "unresolved": "Nevyřešené",
+    "activeList": "Obnovit z archivu",
+    "archivedList": "Archivovat seznam",
+    "members": "Členové",
+    "edit": "Upravit název",
+    "delete": "Smazat seznam",
+    "addItem": "Přidat položku",
+    "showResolved": "Zobrazit vyřešené",
+    "chartTitle": "Statistika položek",
+    "notFound": "Seznam nenalezen",
+    "createNew": "Vytvořit nový"
+  },
+  "modal": {
+  "create": "Vytvořit",
+  "cancel": "Zrušit",
+  "placeholder": "Zadejte název...",
+  "placeholder_item": "Název položky"
+},
+"header": {
+  "mainTitle": "Moje nákupní seznamy",
+  "showArchive": "Archiv",
+  "hideArchive": "Skrýt archiv"
+},
+"members": {
+  "title": "Členové seznamu",
+  "empty": "Zatím žádní členové",
+  "placeholder": "Jméno nového člena",
+  "add": "Přidat člena"
+}
+}

@@ -1,31 +1,91 @@
-/* Globální nastavení */
+/* --- GLOBÁLNÍ NASTAVENÍ --- */
+:root {
+  --bg-main: #ffffff;
+  --bg-card: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-main: #000000;
+  --text-muted: #666666;
+  --border-color: #eeeeee;
+  --primary: #007AFF;
+  --danger: #ff4d4f;
+  --chart-text: #000000;
+}
+
+[data-theme='dark'] {
+  --bg-main: #121212;
+  --bg-card: #1e1e1e;
+  --bg-secondary: #2c2c2c;
+  --text-main: #ffffff;
+  --text-muted: #aaaaaa;
+  --border-color: #333333;
+  --primary: #0A84FF;
+  --danger: #ff6b6b;
+  --chart-text: #ffffff;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #f4f4f48e; 
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  overflow-x: hidden; 
+  min-height: 100vh;
 }
 
 .App {
   display: flex;
-  justify-content: center;
+  flex-direction: column; 
+  align-items: center;    
+  min-height: 100vh;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 
 .detail-container {
   width: 100%;
   max-width: 1000px; 
-  background-color: rgba(255, 255, 255, 0.759);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  background-color: var(--bg-card);
+  padding: 30px;
+  border-radius: 20px; /* Moderní zakulacení */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 
-@media (max-width: 600px) {
-  .App { padding: 10px; }
-  .detail-container { padding: 10px; }
-  button { padding: 10px; font-size: 14px; }
+
+@media (max-width: 768px) {
+  .App {
+    padding: 10px; 
+  }
+  
+  .detail-container {
+    padding: 20px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .App {
+    padding: 0; 
+  }
+
+  .detail-container {
+    padding: 15px;
+    border-radius: 0; 
+    box-shadow: none; 
+    min-height: 100vh; 
+  }
+
+  button {
+    padding: 12px;
+    font-size: 16px; 
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
 }
